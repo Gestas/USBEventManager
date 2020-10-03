@@ -1,0 +1,118 @@
+# USBEventManager
+# See https://github.com/gestas/USBEventManager
+# AUTHOR: craig@gestas.net
+#
+# Devices that won't trigger default actions when they are inserted or removed.
+# If the same device is listed "x" times then up to "x" of those devices will be tolerated.
+whitelist:
+  - xxxx:xxxx
+  - yyyy:yyyy
+  - yyyy:yyyy
+  - 'zzzz:*'
+#
+# Devices that can be inserted without triggering the default action but will on removal.
+removal_blacklist:
+  - xxxx:xxxx
+#
+# Actions to be performed by default when an unknown device is added or removed.
+# Actions are performed in the order listed.
+default_actions:
+  # Immediately disable the USB device.
+   disable_device: true
+  # Lock the screen.
+   screen_lock: true
+  # List of paths to be deleted.
+   delete:
+    #- ~/somepath/ # Deletes everything below this path.
+    #- ~/somepath # Deletes this path and everything below it.
+    #- ~/somefile.file # Deletes this file
+  # List of paths to be securely deleted.
+   secure_delete:
+    #- ~/somepath/ # Securely deletes everything below this path.
+    #- ~/somepath # Securely this path and everything below it.
+    #- ~/somefile.file # Securely deletes this file
+  # Clear the system memory
+   clear_memory: false  # TODO
+  # Clear SWAP files, only supported on Linux for now.
+   clear_swap: false
+  # Destroy all evidence that USBEventManager was installed.
+   melt: false  # TODO
+  # Custom commands to be run. Paths should be absolute.
+   custom_commands:
+    #- ./examples/custom_commands/env.sh
+    #- ./examples/custom_commands/env.ps1
+  # Safe reboot
+   safe_reboot: false
+  # Safe shutdown
+   safe_shutdown: false
+  # Syncs the file system before a forced reboot or shutdown.
+   filesystem_sync: false
+  # Forced reboot
+   force_reboot: false
+  # Forced shutdown
+   force_shutdown: true
+#
+# Device specific actions for ADDED or REMOVED events. Devices listed here are automatically white-listed.
+# Any built-in actions, including "custom_commands" are supported here.
+device_specific:
+   xxxx:xxxx:
+      REMOVED:
+         force_reboot: true
+      ADDED:
+         custom_commands:
+           - ./errata/custom_commands_examples/env.sh
+   '*:*':
+      ADDED:
+         disable_device: true
+         custom_commands:
+           - ./errata/custom_commands_examples/env.sh
+#
+# Override the default actions for specific platforms.
+platform_specific_default_actions:
+   FreeNAS:
+      custom_commands:
+        - ./errata/custom_commands_examples/env.sh
+      filesystem_sync: true
+      safe_shutdown: true
+   Synology:
+      filesystem_sync: true
+      force_shutdown: true
+#
+## General Options ##
+# Frequency in seconds to check for changes to the list of USB devices.
+check_interval: .25
+# Custom command timeout in seconds. 0 == no timeout.
+custom_command_timeout: 30
+# Normally we ignore the exit code from custom commands. If this is false and the
+# custom command either times out or returns a non-zero result USBEventManager will exit.
+ignore_custom_command_failure: true
+# If true USBEventManager will attempt to disable any unused USB interfaces
+# on the system when it starts.
+disable_interfaces_on_start: false # TODO
+#
+# Logging
+log_level: WARNING # Default log level. Overridden by "--loglevel" if passed.
+log_path: /logs   # Log path relative to the base path
+log_retention: 10 # Count of old log files to keep
+log_device_names: false # Add device names to the log.
+#
+##### DANGER #####
+# By default any USB devices attached to the system when USBEventManager is started are
+# not checked against the white-lists. By default they will trigger an action on removal,
+# see the "allow_unknown_removal" option. Setting this to false will trigger an action
+# when USBEventManager starts if an unknown device is attached.
+# DANGER: Be careful if USBEventManager is set to start automatically!! If you haven't white-
+# DANGER: listed all the USB devices attached when USBEventManager starts actions will be triggered!
+# DANGER: !!You may get stuck in a reboot loop!!
+allow_unknown_devices_at_start: true
+##### DANGER #####
+#
+# Allow non-white-listed devices attached when USBEventManager starts to be removed without triggering an event.
+# Removal blacklist overrides this behavior.
+allow_unknown_removal: false
+#
+# Number of passes for secure delete
+secure_delete_passes: 7
+#
+## Debugging and development options. ##
+no_action: false # Perform normally except don't actually perform any action.
