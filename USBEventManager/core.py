@@ -1,7 +1,5 @@
 import time
 import logging
-
-
 from actions import Actions
 from helpers import Helpers
 from usb_helpers import USBTools
@@ -47,7 +45,7 @@ class USBEventManager(object):
             logger.info("No actions is True")
 
     def _get_lists(self):
-        """ Load the white/black lists from the configuration file """
+        """ Load the white and black lists from the configuration file """
         self._default_whitelist: dict = helpers.aggregate_list_dupes(
             self._app_config["whitelist"]
         )
@@ -60,6 +58,11 @@ class USBEventManager(object):
 
     def learn(self):
         """ Learn new USB device IDs """
+
+        if not helpers.is_root:
+            logger.error("Learning requires root/Administrator permissions.")
+            helpers.exiter(1)
+
         logger.debug("Learning...")
         _update = False
         _first_loop = True
@@ -67,9 +70,9 @@ class USBEventManager(object):
             _startup_attached_devices: dict = usb.devices
             while True:
                 if _first_loop:
-                    # Add all devices attached to the system to the default whitelist.
+                    # Add all devices currently attached to the system to the default whitelist.
                     # If there is more than one device attached (x) add the device x times.
-                    print("Adding any new, attached devices to the default whitelist.")
+                    print("Adding any new, currently attached devices to the default whitelist.")
                     for _device, _cnt in _startup_attached_devices.items():
                         if (
                             _device not in self._devices_with_specific_actions.keys()
@@ -171,6 +174,10 @@ class USBEventManager(object):
 
     def remove_devices(self, device_ids: tuple):
         """ Remove one of more devices from the configuration """
+        if not helpers.is_root:
+            logger.error("Removing devices requires root/Administrator permissions.")
+            helpers.exiter(1)
+
         _device_ids = device_ids
         for _dev in _device_ids:
             logger.info('Removing device "%s" from configuration.', _dev)
@@ -436,7 +443,7 @@ class USBEventManager(object):
                     self._actions.trigger_actions(_dev, _event)
                 # If the removed device was attached at startup and not otherwise whitelisted
                 # remove it from the list of devices that can be attached. This prevents the device
-                # from being re-attached.
+                # from being re-attached without triggering an action.
                 if _dev in self._unknown_devices_at_startup.keys():
                     if self._allow_unknown_removal:
                         self._session_allowed_attached_devices.pop(_dev, None)
@@ -462,8 +469,27 @@ class USBEventManager(object):
                     self._actions.trigger_actions(_dev, _event)
 
     @staticmethod
-    def create_service():
+    def automatic_start(task: str):
         """ Create a service to start USBEventManager automatically """
+        if not helpers.is_root:
+            logger.error("Managing automatic start requires root/Administrator permissions.")
+            helpers.exiter(1)
+        _task = task
+        _state = None
+
         if helpers.platform == "Linux":
-            from services import SystemD
-            service = SystemD()
+            from automatic_start import SystemD
+            _service = SystemD()
+            _state = getattr(SystemD, _task)
+        elif helpers.platform == "Darwin":
+            from automatic_start import LaunchD
+            _service = LaunchD()
+            _state = getattr(LaunchD, _task)
+        elif helpers.platform == "Windows":
+            from automatic_start import WindowsService
+            _service = WindowsService()
+            _state = getattr(WindowsService, _task)
+        if _state:
+            helpers.exiter(0)
+        else:
+            helpers.exiter(1)

@@ -2,7 +2,8 @@ import click
 import logging
 
 from core import USBEventManager
-
+from helpers import Helpers
+helpers = Helpers()
 logger = logging.getLogger(__name__)
 
 
@@ -91,11 +92,28 @@ def learn(config):
 
 
 @cli.command(help="Configure USBEventManager to start automatically.")
+@click.option('--disable',
+              required=False,
+              is_flag=True,
+              default=False,
+              help="Disable automatic start without changing stopping the current process, if any.")
+@click.option('--remove',
+              required=False,
+              is_flag=True,
+              default=False,
+              help="Remove and stop the USBEventManager service.")
 @pass_config
-def automatic_start(config):
+def automatic_start(config, disable, remove):
     """ Create a service """
     uev = config.uev
-    uev.create_service()
+    if disable and remove:
+        logger.error("--disable and --remove cannot both be passed.")
+        helpers.exiter(1)
+    if disable:
+        uev.automatic_start(task="disable")
+    if remove:
+        uev.automatic_start(task="remove")
+    uev.automatic_start(task="create")
 
 
 if __name__ == "__main__":

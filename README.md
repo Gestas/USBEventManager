@@ -20,17 +20,13 @@ There are basic examples of some custom_commands in the `examples` folder.
 ## Install -
 ##### Ubuntu -
 ```
-sudo apt install libusb-1.0-0-dev 
-git clone https://github.com/gestas/USBEventManager
-cd USBEventManager
-chmod +x install.sh
+sudo apt install -y  libusb-1.0-0-dev 
+git clone https://github.com/Gestas/USBEventManager.git && cd USBEventManager
 ./install.sh
 ```
 ##### MacOS -
 ```
-git clone https://github.com/gestas/USBEventManager
-cd USBEventManager
-chmod +x install.sh
+git clone https://github.com/gestas/USBEventManager && cd USBEventManager
 ./install.sh
 ```
 ##### Windows 10 -
@@ -41,10 +37,10 @@ USBEventManager needs to run with root/Administrator permissions. It's bad pract
 
 ## Usage -
 Must be run with root/Administrator permissions. Start by whitelisting any USB devices that you regularly use. 
-You can do this by starting USBEventManager in learning mode, `# usbeventmanager --learn`. You can remove USB devices 
-from the whitelist by running `$ usbeventmanager --remove xxxx:xxxx`.
+You can do this by starting USBEventManager in learning mode, `$ sudo USBEventManager --learn`. You can remove USB devices
+from the whitelist by running `$ sudo USBEventManager --remove xxxx:xxxx`.
 
-Alternatively you can directly edit the configuration file at `~/.usbeventmanager/config.yml`. Either or both the 
+Alternatively you can directly edit the configuration file at `/etc/usbeventmanager.yml`. Either or both the
 manufacturer and product IDs can be a wildcard, e.g `*:*`, `*:zzzz`, `yyyy:*`.
 
 Devices can be defined in three different lists -
@@ -58,33 +54,28 @@ When change is detected the lists are checked in this order -
 1. `whitelist`
 
 ```
-# USBEventManager --help
-Usage: USBEventManager.py [OPTIONS] COMMAND [ARGS]...
-
+$ sudo USBEventManager --help
 Options:
   --loglevel [ERROR|WARNING|INFO|DEBUG]
                                   Sets the logging level. Defaults to WARNING.
-  
   --no-actions                    Don't actually perform any actions. Used for
                                   testing and development.
 
   --help                          Show this message and exit.
 
 Commands:
-  learn         Learn new USB devices.
-  list-actions  List enabled actions.
-  list-devices  List devices in the config file.
-  monitor       Monitor for added and removed USB devices
-  remove        Remove one or more USB devices from the configuration. -> 'remove "xxxx:xxxx" "yyyy:yyyy"'
-
+  automatic-start  Configure USBEventManager to start automatically.
+  learn            Learn new USB devices.
+  list-actions     List enabled actions.
+  list-devices     List devices in the config file.
+  monitor          Monitor for added and removed USB devices
+  remove           Remove one or more USB devices from the configuration. -> 'remove "xxxx:xxxx" "yyyy:yyyy"'
 ```
 
-### Starting USBEventManager when the system starts -
+#### Starting USBEventManager when the system starts -
 USBEventManager can create the required service for you, run -
 
-```
-USBEventManager create-service
-```
+```$ sudo USBEventManager --automatic-start```
 
 ## Platforms -
 * FreeNas
@@ -134,3 +125,34 @@ evaluated from the top of each list down you can still set actions for specific 
 ## Thanks to
 * [usbkill](https://github.com/hephaest0s/usbkill)
 * phealy3330 @ https://stackoverflow.com/questions/17455300/python-securely-remove-file
+
+
+### Removing USBEventManager
+##### Ubuntu -
+```
+# In the USBEventManager folder - 
+source /venv/bin/activate
+pip uninstall -y USBEventManager
+rm -rf * .git
+cd ..
+rmdir USBEventManager
+sudo rm /usr/local/bin/USBEventManager
+
+# To remove the configuration file - 
+sudo rm /etc/usbeventmanager.yml 
+
+# If automatic start is setup - 
+sudo systemctl stop USBEventManager.service
+sudo systemctl disable USBEventManager.service
+sudo rm /etc/systemd/system/USBEventManager.service
+sudo systemctl daemon-reload
+sudo systemctl reset-failed
+```
+##### MacOS -
+```
+TODO
+```
+##### Windows 10 -
+```
+TODO
+```

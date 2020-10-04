@@ -2,7 +2,6 @@ import os
 import ctypes
 import logging
 import subprocess
-
 from helpers import Helpers
 from usb_helpers import USBTools
 

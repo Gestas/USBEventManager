@@ -29,18 +29,13 @@ IF "%ERRORLEVEL" NEQ "0" (
     )
 
 ECHO Creating the start script at %_START_SCRIPT_PATH
-IF NOT EXIST %_START_SCRIPT_PATH (
-    @ECHO OFF
-    ECHO REM Activates the virtualenv then starts USBEventManager. > %_START_SCRIPT_PATH
-    ECHO REM Allows us to run in a virtualenv as Administrator. >> %_START_SCRIPT_PATH
-    ECHO cd %_PROJECT_DIR >> %_START_SCRIPT_PATH
-    ECHO .\env\Scripts\activate >> %_START_SCRIPT_PATH
-    ECHO runas /trustlevel:0x20000 python ./%_APP/usbeventmanager.py %* >> %_START_SCRIPT_PATH
-    @ECHO ON
-    )
-ELSE (
-    ECHO Start script already exists.
-    )
+@ECHO OFF
+ECHO REM Activates the virtualenv then starts USBEventManager. > %_START_SCRIPT_PATH
+ECHO REM Allows us to run in a virtualenv as Administrator. >> %_START_SCRIPT_PATH
+ECHO cd %_PROJECT_DIR >> %_START_SCRIPT_PATH
+ECHO .\env\Scripts\activate >> %_START_SCRIPT_PATH
+ECHO runas /trustlevel:0x20000 python ./%_APP/usbeventmanager.py %* >> %_START_SCRIPT_PATH
+@ECHO ON
 
 ECHO Creating and activating a new Python 3.8 virtualenv
 py -3.8 -m venv %_PROJECT_DIR
